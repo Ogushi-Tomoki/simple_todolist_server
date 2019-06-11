@@ -58,7 +58,7 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            python manage.py test
+            python simple_todolist_server.py test
 
       - store_artifacts:
           path: test-reports
