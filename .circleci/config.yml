@@ -12,54 +12,87 @@
 #
 # Check https://circleci.com/docs/2.0/language-python/ for more details
 #
+# version: 2
+# jobs:
+#   build:
+#     docker:
+#       # specify the version you desire here
+#       # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
+#       - image: circleci/python:3.6.1
+
+#       # Specify service dependencies here if necessary
+#       # CircleCI maintains a library of pre-built images
+#       # documented at https://circleci.com/docs/2.0/circleci-images/
+#       # - image: circleci/postgres:9.4
+
+#     working_directory: ~/repo
+
+#     steps:
+#       - checkout
+
+#       # # Download and cache dependencies
+#       # - restore_cache:
+#       #     keys:
+#       #       - v1-dependencies-{{ checksum "requirements.txt" }}
+#       #       # fallback to using the latest cache if no exact match is found
+#       #       - v1-dependencies-
+
+#       # - run:
+#       #     name: install dependencies
+#       #     command: |
+#       #       python3 -m venv venv
+#       #       . venv/bin/activate
+#       #       pip install -r requirements.txt
+
+#       # - save_cache:
+#       #     paths:
+#       #       - ./venv
+#       #     key: v1-dependencies-{{ checksum "requirements.txt" }}
+
+#       # run tests!
+#       # this example uses Django's built-in test-runner
+#       # other common Python testing frameworks include pytest and nose
+#       # https://pytest.org
+#       # https://nose.readthedocs.io
+#       - run:
+#           name: run tests
+#           command: |
+#             . venv/bin/activate
+#             python simple_todolist_server.py test
+
+#       - store_artifacts:
+#           path: test-reports
+#           destination: test-reports
+
 version: 2
 jobs:
   build:
     docker:
-      # specify the version you desire here
-      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
-      - image: circleci/python:3.6.1
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/postgres:9.4
-
-    working_directory: ~/repo
-
+      - image: circleci/python:3.7.3 # primary container
     steps:
       - checkout
 
-      # # Download and cache dependencies
-      # - restore_cache:
-      #     keys:
-      #       - v1-dependencies-{{ checksum "requirements.txt" }}
-      #       # fallback to using the latest cache if no exact match is found
-      #       - v1-dependencies-
+  test:
+    docker:
+      - image: circleci/python:3.7.3
+    steps:
+      - checkout
+      - run: 
+          name: サーバー起動
+          command: python todo_server.py
+          background: true
+      - run: 
+          name: サーバー起動待ち(5秒間)
+          command: sleep 5
+      - run: 
+          name: TODOが1件もない時、全取得　→　Not Found(正常)
+          command: curl -X GET http://localhost:8080/api/v1/todo     
 
-      # - run:
-      #     name: install dependencies
-      #     command: |
-      #       python3 -m venv venv
-      #       . venv/bin/activate
-      #       pip install -r requirements.txt
-
-      # - save_cache:
-      #     paths:
-      #       - ./venv
-      #     key: v1-dependencies-{{ checksum "requirements.txt" }}
-
-      # run tests!
-      # this example uses Django's built-in test-runner
-      # other common Python testing frameworks include pytest and nose
-      # https://pytest.org
-      # https://nose.readthedocs.io
-      - run:
-          name: run tests
-          command: |
-            . 
-            python simple_todolist_server.py test
-
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
+workflows:
+  version: 2
+  todo_server_checker:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
