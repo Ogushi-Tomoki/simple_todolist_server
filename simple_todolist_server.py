@@ -88,6 +88,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             global todolist
 
+            # todoリストに追加する
             idnumber = len(todolist)
             requestBody["id"] = idnumber
             todolist.append(requestBody)
